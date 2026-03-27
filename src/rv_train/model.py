@@ -8,6 +8,7 @@ from qwen_vl_utils import process_vision_info
 from transformers import LogitsProcessor, Qwen2_5_VLProcessor
 from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import Qwen2_5_VLForConditionalGeneration
 
+# print("model loading")
 
 class NumberSpaceOnlyProcessor(LogitsProcessor):
     """Constrains generation to numbers (0-9), spaces, and EOS."""

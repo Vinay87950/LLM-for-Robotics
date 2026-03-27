@@ -13,3 +13,21 @@ wheels/
 
 # Virtual environments
 .venv
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Project-specific exclusions
+claude.md
+MIGRATION.md
+train_loss.png
+my_code/
+uv.lock
+pyrightconfig.json
