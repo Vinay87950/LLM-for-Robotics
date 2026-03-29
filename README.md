@@ -4,7 +4,7 @@ A reimplementation of [VLA-0](https://github.com/NVlabs/vla0) using [TRL](https:
 
 Based on the minimal [vla0-trl](https://github.com/MilkClouds/vla0-trl) codebase (~1,200 lines), which fine-tunes Qwen2.5-VL to predict actions as text. No custom architecture needed.
 
-> **Note:** The video demonstration and the dataset link will be updated shortly. Please check back soon, and full code is not availabe yet, working on it, it will also be updated shortly.
+> **Note:** The video demonstration and the dataset link will be updated shortly.
 
 ## Installation
 
