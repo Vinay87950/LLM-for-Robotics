@@ -29,10 +29,8 @@ source .venv/bin/activate
 
 ```bash
 # Single GPU
-python scripts/train.py --config configs/vla0.yaml
+python scripts/train.py --config configs/my_config.yaml
 
-# Multi-GPU
-accelerate launch --num_processes=8 scripts/train.py --config configs/vla0.yaml
 ```
 
 ### Eval
@@ -40,51 +38,58 @@ accelerate launch --num_processes=8 scripts/train.py --config configs/vla0.yaml
 ```bash
 python scripts/eval.py \
     --model_path ./runs/vla0/checkpoint-xxx \
-    --task_suite libero_spatial \
     --action_horizon 8 \
     --ensemble_prediction 8 \
-    --torch_compile \
-    --skip_evaluated \
-    --shard_id 0 --num_shards 10
+    --save_video
 ```
 
 | Argument | Description |
 |----------|-------------|
-| `--task_suite` | Task suite: `libero_spatial`, `libero_object`, `libero_goal`, `libero_10` |
 | `--action_horizon` | Execute N actions before re-querying model (default: 1) |
 | `--ensemble_prediction` | Average N overlapping action chunks (default: 1 = off) |
-| `--torch_compile` | Enable torch.compile for faster inference |
-| `--skip_evaluated` | Skip episodes with existing result videos |
-| `--shard_id`, `--num_shards` | Parallelize: run shard M of N (e.g., 0/10, 1/10, ...) |
-| `--log_dir` | Output directory (default: auto-generated with timestamp) |
 
-Note: When running multiple shards in parallel, specify `--log_dir` explicitly to ensure all shards write to the same directory.
 
-### SLURM
-
-For SLURM users, see [`scripts/train.sbatch`](scripts/train.sbatch) and [`scripts/eval.sbatch`](scripts/eval.sbatch).
 
 ## Configuration
 
-See [`configs/vla0.yaml`](configs/vla0.yaml). Key parameters:
+See [`configs/my_config.yaml`](configs/my_config.yaml). Key parameters:
 
 | Parameter | Value |
 |-----------|-------|
-| `learning_rate` | 4e-5 (5e-6 × 8 GPUs) |
-| `num_train_epochs` | 32 |
+| `learning_rate` | 4e-5 (5e-6 × 1 GPUs) |
+| `num_train_epochs` | 20 |
 | `per_device_train_batch_size` | 8 |
 | `horizon` | 8 |
 
 ## Project Structure
 
 ```
-├── configs/vla0.yaml       # Training config
+├── configs/
+│   └── my_config.yaml                          # Training configuration
+├── data_collection/
+│   ├── convert_to_libero_format.py             # Dataset format conversion
+│   ├── diffusion_policy/                       # Diffusion policy implementation
+│   │   ├── dataloaders.py
+│   │   ├── observation_encoder.py
+│   │   ├── observation_network.py
+│   │   ├── policy_network.py
+│   │   ├── policy_train.py
+│   │   └── rollouts.py
+│   └── robosuite_human_demonstration/          # Human demo collection
+│       ├── collect_human_demonstration.py
+│       └── check_dataset.py
 ├── scripts/
-│   ├── train.py            # Training entry
-│   └── eval.py             # Evaluation entry
+│   ├── train.py                                # Training entry point
+│   └── eval.py                                 # Evaluation entry point
 └── src/
-    ├── rv_train/           # Dataset, collator, model
-    └── rv_eval/            # Evaluator
+    ├── rv_train/                               # Training pipeline
+    │   ├── collator.py                         # Data collator for VLA
+    │   ├── dataset.py                          # Dataset loader
+    │   ├── model.py                            # Model loading & LoRA setup
+    │   └── utils.py                            # Action tokenization utils
+    └── rv_eval/                                # Evaluation pipeline
+        ├── evaluator.py                        # Episode evaluator
+        └── robosuite_env.py                    # Robosuite environment wrapper
 ```
 
 ## Attribution
