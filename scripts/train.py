@@ -62,25 +62,7 @@ def main():
         num_cams=2,
         tile_images=data_args.tile_images,
     )
-
-    # --- Setup LoRA Config if requested ---
-    peft_config = None
-    if model_args.use_peft:
-        print(f"Configuring LoRA (Rank: {model_args.lora_rank})...")
-        peft_config = LoraConfig(
-            r=model_args.lora_rank,
-            lora_alpha=model_args.lora_alpha,
-            target_modules=[
-                "q_proj", "k_proj", "v_proj", "o_proj",
-                "gate_proj", "up_proj", "down_proj"
-            ],
-            lora_dropout=0.05,
-            bias="none",
-            task_type="CAUSAL_LM",
-        )
-    else:
-        print("Using Full Fine-Tuning (ALL parameters will be updated).")
-
+   
     print("Loading dataset...")
     dataset = LiberoDataset(
         repo_id=data_args.repo_id,
@@ -89,7 +71,10 @@ def main():
         img_size=data_args.img_size,
         crop_ratio=data_args.crop_ratio,
         tile_images=data_args.tile_images,
-        # ... other augs
+        brightness_aug=data_args.brightness_aug,
+        contrast_aug=data_args.contrast_aug,
+        saturation_aug=data_args.saturation_aug,
+        hue_aug=data_args.hue_aug,
     )
 
     # Save stats
