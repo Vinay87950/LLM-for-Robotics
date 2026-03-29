@@ -56,7 +56,7 @@ See [`configs/my_config.yaml`](configs/my_config.yaml). Key parameters:
 
 | Parameter | Value |
 |-----------|-------|
-| `learning_rate` | 4e-5 (5e-6 × 1 GPUs) |
+| `learning_rate` | 4e-5 |
 | `num_train_epochs` | 20 |
 | `per_device_train_batch_size` | 8 |
 | `horizon` | 8 |
