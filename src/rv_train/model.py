@@ -31,11 +31,15 @@ class NumberSpaceOnlyProcessor(LogitsProcessor):
 def load_model_for_training(
     model_id: str = "Qwen/Qwen2.5-VL-3B-Instruct",
     use_flash_attention: bool = False,
+    use_lora = False,
+    lora_rank = 16,
+    lora_alpha = 32,
 ) -> Qwen2_5_VLForConditionalGeneration:
     """Load Qwen2.5-VL for full fine-tuning (no LoRA/QLoRA).
 
     REVIEW: Original code supported LoRA/QLoRA. This version does full fine-tuning
     as per paper's best results. Add LoRA support if needed.
+    original code: https://github.com/NVlabs/vla0/blob/main/rv_train/models/qwen/model.py
     """
     kwargs = {"torch_dtype": torch.bfloat16}
     if use_flash_attention:
@@ -43,6 +47,24 @@ def load_model_for_training(
         kwargs["attn_implementation"] = "kernels-community/flash-attn3"
 
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(model_id, **kwargs)
+
+    if use_lora:
+        # If using QLoRA, we must prepare the model first, but we did not use QLoRA in this project
+        if use_qlora:
+            # model = prepare_model_for_kbit_training(model)
+            pass
+
+        lora_config = LoraConfig(
+            r=lora_rank,
+            lora_alpha=lora_alpha,
+            target_modules=["q_proj", "v_proj", "k_proj"], # usually last layer of the model
+            lora_dropout=0.05,
+            bias="none",
+            task_type="CAUSAL_LM",
+        )
+        model = get_peft_model(model, lora_config) # automatically freezes the original model
+        model.print_trainable_parameters()
+
     return model
 
 
