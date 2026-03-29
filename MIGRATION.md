@@ -1,4 +1,4 @@
-# Migration Notes
+# Migration Notes (Original Code) this .md file is not modified
 
 Technical details on differences between this repo and the [original VLA-0](https://github.com/NVlabs/vla0).
 
