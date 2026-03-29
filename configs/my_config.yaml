@@ -1,13 +1,20 @@
 # VLA-0 Training Configuration
 # Paper: arXiv:2510.13054
-# Usage: python scripts/train.py --config configs/vla0.yaml
+# Usage: CUDA_VISIBLE_DEVICES=0 python scripts/train.py --config /home/jovyan/vla0-trl/configs/my_config.yaml
 
 # === ModelArguments ===
 model_id: "Qwen/Qwen2.5-VL-3B-Instruct"
 use_flash_attention: true # was false on original
 
+# === LoRA ===
+# By default, use_peft is false for Full Fine-Tuning.
+use_peft = False # turn it to true, if want to train using LoRA
+# lora_rank: 16
+# lora_alpha: 32
+
+
 # === DataArguments ===
-repo_id: "physical-intelligence/libero"
+repo_id: "/home/jovyan/vla0-trl/libero_pick_place" # change as per your dataset
 history: 1
 horizon: 8
 img_size: 224
@@ -38,8 +45,8 @@ max_grad_norm: 0.0  # original uses clip_grad_norm: 0.0 (disabled)
 warmup_steps: 0
 logging_steps: 10
 save_total_limit: 1000
-save_steps: 10000 # originally 2 epoch
+save_steps: 5000 # originally 2 epoch
 bf16: true
 dataloader_num_workers: 8
-report_to: ["tensorboard", "wandb"]
+report_to: ["tensorboard"]
 seed: 42 # TrainerArguments default value: 42
