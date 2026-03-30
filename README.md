@@ -104,6 +104,17 @@ Licensed under [CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/).
 
 If you use this code, please cite the original VLA-0 paper:
 
+for diffusion policy reimplementation:
+```bibtex
+@inproceedings{robomimic2021,
+  title={What Matters in Learning from Offline Human Demonstrations for Robot Manipulation},
+  author={Ajay Mandlekar and Danfei Xu and Josiah Wong and Soroush Nasiriany and Chen Wang and Rohun Kulkarni and Li Fei-Fei and Silvio Savarese and Yuke Zhu and Roberto Mart\'{i}n-Mart\'{i}n},
+  booktitle={Conference on Robot Learning (CoRL)},
+  year={2021}
+}
+```
+
+
 ```bibtex
 @article{goyal2025vla0,
   title={VLA-0: Building State-of-the-Art VLAs with Zero Modification},
