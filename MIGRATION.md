@@ -123,6 +123,15 @@ Picture 1: <|vision_start|><|image_pad|>...(128 pads)...<|vision_end|>put the wh
 <|im_start|>assistant
 474 479 460 669 391 674 0 471 479 460 669 391 674 0 458 479 460 669 391 674 0 455 472 460 669 391 674 0 455 444 460 669 391 674 0 455 396 449 669 391 674 0 449 335 422 669 391 674 0 422 282 397 669 391 674 0<|im_end|>
 ```
+**My Output**:
+```
+<|im_start|>system
+Analyze the input image and predict robot actions for the next 8 timesteps. Each action has 7 dimensions. Output a single sequence of 56 integers (0-1000 each), representing the 8 timesteps sequentially. Provide only space separated numbers. Nothing else.<|im_end|>
+<|im_start|>user
+Picture 1: <|vision_start|><|image_pad|>...(128 pads)...<|vision_end|>lift the cube from the table<|im_end|>
+<|im_start|>assistant
+250 250 250 209 304 357 0 250 250 250 209 304 357 0 250 250 250 209 304 357 0 250 250 250 209 304 357 0 250 250 250 209 304 357 0 250 250 250 209 304 357 0 250 250 250 209 304 357 0 250 250 250 209 304 357 0<|im_end|>
+```
 
 **input_ids (433 tokens)**:
 ```
