@@ -1,6 +1,6 @@
 # LLM-for-Robotics: VLA-0 Reimplementation with TRL
 
-A reimplementation of [VLA-0](https://github.com/NVlabs/vla0) using [TRL](https://github.com/huggingface/trl)'s SFTTrainer, adapted for my own robotics project.
+A reimplementation of [VLA-0](https://github.com/NVlabs/vla0) using [TRL](https://github.com/huggingface/trl)'s SFTTrainer, adapted for my own robotics project. And also for Diffusion policy implementation was reimplemented using [robomimic](https://github.com/ARISE-Initiative/robomimic/blob/master/robomimic/models/diffusion_policy_nets.py)
 
 Based on the minimal [vla0-trl](https://github.com/MilkClouds/vla0-trl) codebase (~1,200 lines), which fine-tunes Qwen2.5-VL to predict actions as text. No custom architecture needed.
 
