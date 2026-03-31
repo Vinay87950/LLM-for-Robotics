@@ -43,47 +43,31 @@ import math
 │   │   ├── states  (186, 32) (float64)
 """
 
-
 def quat2axisangle(quat):
     """
-    Converts quaternion(s) to axis-angle format (vectorized).
+    Copied from robosuite: https://github.com/ARISE-Initiative/robosuite/blob/eafb81f54ffc104f905ee48a16bb15f059176ad3/robosuite/utils/transform_utils.py#L490C1-L512C55
+
+    Converts quaternion to axis-angle format.
     Returns a unit vector direction scaled by its angle in radians.
 
     Args:
-        quat (np.array): Can be either:
-            - Single quaternion: (4,) array as (x,y,z,w)
-            - Multiple quaternions: (T, 4) array as (x,y,z,w)
+        quat (np.array): (x,y,z,w) vec4 float angles
 
     Returns:
-        np.array: 
-            - Single: (3,) axis-angle exponential coordinates
-            - Multiple: (T, 3) axis-angle exponential coordinates
+        np.array: (ax,ay,az) axis-angle exponential coordinates
     """
-    # Handle both single quaternion and array of quaternions
-    single_quat = (quat.ndim == 1)
-    if single_quat:
-        quat = quat.reshape(1, -1)
-    
-    # Clip quaternion w component
-    q = quat.copy()
-    q[:, 3] = np.clip(q[:, 3], -1.0, 1.0)
-    
-    # Calculate denominator
-    den = np.sqrt(1.0 - q[:, 3] * q[:, 3])
-    
-    # Handle near-zero rotations
-    eps = 1e-6
-    result = np.zeros((q.shape[0], 3))
-    valid_mask = den > eps
-    
-    # Only compute for valid (non-zero) rotations
-    if valid_mask.any():
-        result[valid_mask] = (q[valid_mask, :3] * 2.0 * np.arccos(q[valid_mask, 3])[:, None]) / den[valid_mask, None]
-    
-    # Return shape matching input
-    if single_quat:
-        return result[0]
-    return result
+    # clip quaternion
+    if quat[3] > 1.0:
+        quat[3] = 1.0
+    elif quat[3] < -1.0:
+        quat[3] = -1.0
+
+    den = np.sqrt(1.0 - quat[3] * quat[3])
+    if math.isclose(den, 0.0):
+        # This is (close to) a zero degree rotation, immediately return
+        return np.zeros(3)
+
+    return (quat[:3] * 2.0 * math.acos(quat[3])) / den
 
 
 class RobosuiteDataloader(Dataset):
