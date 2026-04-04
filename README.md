@@ -18,7 +18,7 @@ uv pip install -e .
 # LeRobot dependency
 GIT_LFS_SKIP_SMUDGE=1 uv pip install git+https://github.com/huggingface/lerobot.git@f39652707caed42a7cd5ab36066da5663b9565eb
 
-# For evaluation (can skip this, it's only needen when you train on official dataset 'https://huggingface.co/datasets/physical-intelligence/libero'
+# For evaluation only for Liberodataset (can skip this, it's only needed when you train on official dataset 'https://huggingface.co/datasets/physical-intelligence/libero'
 uv pip install -e ".[eval]"
 
 # Do not forget activating your venv
