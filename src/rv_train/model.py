@@ -3,6 +3,7 @@
 import json
 from typing import Optional
 
+import numpy as np
 import torch
 from qwen_vl_utils import process_vision_info
 from transformers import LogitsProcessor, Qwen2_5_VLProcessor
@@ -120,8 +121,10 @@ class QwenVLActor:
         if stats_path:
             with open(stats_path, "r") as f:
                 self.stats = json.load(f)
+            self.state_stats = self.stats.get("state", None)
         else:
             self.stats = None
+            self.state_stats = None
 
         self.system_prompt = (
             f"Analyze the input image and predict robot actions for the next "
@@ -131,12 +134,30 @@ class QwenVLActor:
             f"sequentially. Provide only space separated numbers. Nothing else."
         )
 
+    def _state_to_text(self, state: np.ndarray) -> str:
+        """Discretise proprioceptive state to text using same binning as actions."""
+        min_s = np.array(self.state_stats["min"])
+        max_s = np.array(self.state_stats["max"])
+
+        normalized = (state - min_s) / (max_s - min_s + 1e-8)
+        discretized = np.round(normalized * self.num_bins).astype(int)
+        discretized = np.clip(discretized, 0, self.num_bins)
+
+        return " ".join(map(str, discretized.flatten().tolist()))
+
     @torch.no_grad()
-    def predict(self, image, instruction: str, temperature: float = 0.1):
-        """Predict actions given image and instruction."""
+    def predict(self, image, instruction: str, state: np.ndarray = None, temperature: float = 0.1):
+        """Predict actions given image, instruction, and optional proprioceptive state."""
+        # Prepend discretised proprioceptive state to instruction (if available)
+        if state is not None and self.state_stats is not None:
+            state_text = self._state_to_text(state)
+            user_text = f"{state_text}\n{instruction}"
+        else:
+            user_text = instruction
+
         messages = [
             {"role": "system", "content": [{"type": "text", "text": self.system_prompt}]},
-            {"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": instruction}]},
+            {"role": "user", "content": [{"type": "image", "image": image}, {"type": "text", "text": user_text}]},
         ]
 
         text = self.processor.apply_chat_template(

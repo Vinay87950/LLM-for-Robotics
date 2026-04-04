@@ -73,10 +73,15 @@ class LiberoDataset(Dataset):
 
         # Compute stats (convert to lists for JSON serialization)
         act_stats = self.dataset.meta.stats[self.action_key]
+        state_stats = self.dataset.meta.stats[self.state_key]
         self.stats = {
             "out_ori_act": {
                 "min": act_stats["min"].tolist() if hasattr(act_stats["min"], "tolist") else act_stats["min"],
                 "max": act_stats["max"].tolist() if hasattr(act_stats["max"], "tolist") else act_stats["max"],
+            },
+            "state": {
+                "min": state_stats["min"].tolist() if hasattr(state_stats["min"], "tolist") else state_stats["min"],
+                "max": state_stats["max"].tolist() if hasattr(state_stats["max"], "tolist") else state_stats["max"],
             },
         }
 
@@ -150,11 +155,37 @@ class LiberoDataset(Dataset):
 
         return " ".join(map(str, discretized.flatten().tolist()))
 
+    def _state_to_text(self, state: np.ndarray) -> str:
+        """Discretise proprioceptive state to text using same binning as actions.
+
+        The 8D state vector (eef_pos, eef_axis_angle, gripper_qpos) is normalised
+        to [0, 1] using dataset statistics, multiplied by num_bins, and rounded.
+        """
+        stats = self.stats["state"]
+        min_s = np.array(stats["min"])
+        max_s = np.array(stats["max"])
+
+        normalized = (state - min_s) / (max_s - min_s + 1e-8)
+        discretized = np.round(normalized * self.num_bins).astype(int)
+        discretized = np.clip(discretized, 0, self.num_bins)
+
+        return " ".join(map(str, discretized.flatten().tolist()))
+
     def __getitem__(self, idx: int) -> Dict:
         sample = self.dataset[idx]
 
         images = self._process_images(sample)
         instruction = sample["task"]
+
+        # Extract proprioceptive state (take latest timestep if multi-step)
+        state = sample[self.state_key].numpy()
+        if state.ndim == 2:
+            state = state[-1]
+        state_text = self._state_to_text(state)
+
+        # Prepend discretised proprioceptive state to the instruction
+        user_text = f"{state_text}\n{instruction}"
+
         # Actions include history, take only future actions (matches original)
         all_actions = sample[self.action_key].numpy()
         actions = all_actions[self.history :]  # Skip history, keep horizon
@@ -163,7 +194,7 @@ class LiberoDataset(Dataset):
         # Format for SFTTrainer VLM - matches original QwenActor.format_data()
         messages = [
             {"role": "system", "content": [{"type": "text", "text": self.system_prompt}]},
-            {"role": "user", "content": [{"type": "image"}] + [{"type": "text", "text": instruction}]},
+            {"role": "user", "content": [{"type": "image"}, {"type": "text", "text": user_text}]},
             {"role": "assistant", "content": [{"type": "text", "text": action_text}]},
         ]
 

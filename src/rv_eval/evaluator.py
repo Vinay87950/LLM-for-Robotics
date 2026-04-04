@@ -2,6 +2,7 @@
 
 import csv
 import logging
+import math
 import os
 import time
 from typing import Dict, List, Optional
@@ -20,6 +21,48 @@ DUMMY_ACTION = [0.0] * 6 + [-1.0]
 def flip_image(img: np.ndarray) -> np.ndarray:
     """Robosuite and LIBERO images may be flipped; flip them back if needed."""
     return np.ascontiguousarray(img[::-1, ::-1])
+
+
+def quat2axisangle(quat):
+    """Converts quaternion to axis-angle format.
+
+    Copied from robosuite:
+    https://github.com/ARISE-Initiative/robosuite/blob/eafb81f/robosuite/utils/transform_utils.py#L490
+
+    Returns a unit vector direction scaled by its angle in radians.
+
+    Args:
+        quat (np.array): (x,y,z,w) vec4 float angles
+
+    Returns:
+        np.array: (ax,ay,az) axis-angle exponential coordinates
+    """
+    # clip quaternion
+    if quat[3] > 1.0:
+        quat[3] = 1.0
+    elif quat[3] < -1.0:
+        quat[3] = -1.0
+
+    den = np.sqrt(1.0 - quat[3] * quat[3])
+    if math.isclose(den, 0.0):
+        # This is (close to) a zero degree rotation, immediately return
+        return np.zeros(3)
+
+    return (quat[:3] * 2.0 * math.acos(quat[3])) / den
+
+
+def extract_proprio_state(obs: dict) -> np.ndarray:
+    """Extract 8D proprioceptive state from Robosuite observation.
+
+    Components: eef_pos (3) + eef_axis_angle (3) + gripper_qpos (2) = 8D
+    state representation used during training
+    """
+    eef_pos = obs["robot0_eef_pos"]              # (3,)
+    eef_quat = obs["robot0_eef_quat"]            # (4,) quaternion (x,y,z,w)
+    eef_aa = quat2axisangle(eef_quat)              # (3,) axis-angle
+    gripper = obs["robot0_gripper_qpos"]          # (2,)
+    return np.concatenate([eef_pos, eef_aa, gripper])
+
 
 def preprocess_obs(
     obs: Dict,
@@ -133,12 +176,13 @@ class RobosuiteEvaluator:
 
             if action_chunk is None or action_i >= action_horizon:
                 image = preprocess_obs(obs, self.img_size, self.crop_ratio, self.tile_images)
+                state = extract_proprio_state(obs)
                 
                 if self.save_debug_images and not debug_saved:
                     self._save_debug_images(obs, image, episode_idx)
                     debug_saved = True
 
-                action_chunk = self.model.predict(image, instruction).numpy()
+                action_chunk = self.model.predict(image, instruction, state=state).numpy()
                 model_queries += 1
 
                 if self.debug_actions:
